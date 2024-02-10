@@ -1,5 +1,10 @@
+mod settings;
 mod short_id;
 
+use settings::ShortIdSettings;
+
 fn main() {
-   println!("Hello, world! {}", short_id::generate());
+    let settings = ShortIdSettings::new();
+
+    println!("short-id: {}", short_id::generate(&settings));
 }
