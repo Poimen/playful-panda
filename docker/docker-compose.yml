@@ -5,9 +5,10 @@ services:
     restart: always
     ports:
       - '6379:6379'
-    command: redis-server --save 20 1 --loglevel warning --requirepass changeit --user url-short
+    command: ["redis-server", "/etc/redis/redis.conf"]
     volumes:
       - ./redis-cache:/data
+      - ./redis.conf:/etc/redis/redis.conf
 
 volumes:
   cache:
