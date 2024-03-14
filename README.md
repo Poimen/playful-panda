@@ -20,7 +20,7 @@ Naturally, using docker-compose for anything outside testing, should be avoided.
 
 The project can be run by using the command, in the root:
 ```bash
-REDIS_SERVER_URL="localhost" cargo run
+ REDIS_SERVER_URL="redis://:changeit@localhost" cargo run
 ```
 
 This will expect that there is a REDIS server running at the URL. For a test environment, the docker-compose will wil run REDIS in a way all the default configuration setup will expect.
