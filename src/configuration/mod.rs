@@ -7,7 +7,7 @@ use redis_settings::RedisClusterSettings;
 use short_id_settings::ShortIdSettings;
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AppSettings {
     pub host: HostSettings,
     pub redis: RedisClusterSettings,

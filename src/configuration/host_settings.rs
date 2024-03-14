@@ -2,7 +2,7 @@ pub const WEB_SERVER_DEFAULT_ADDRESS: &'static str = "localhost";
 
 pub const WEB_SERVER_DEFAULT_PORT: u16 = 8000;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct HostSettings {
     pub ip_addr: String,
     pub port: u16,
