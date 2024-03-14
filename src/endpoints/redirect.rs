@@ -1,20 +1,5 @@
 use crate::{configuration::AppSettings, endpoints::redis_client::retrieve_redirect_url};
-use actix_web::{
-    get, post,
-    web::{self, Redirect},
-    HttpRequest, HttpResponse, Responder,
-};
-
-// #[get("/echo")]
-// async fn echo(path: web::Path<String>) -> impl Responder {
-//     let short_code = path.into_inner();
-
-//     if short_code.is_empty() {
-//         return HttpResponse::TemporaryRedirect().body("");
-//     };
-
-//     return Redirect::to(short_code);
-// }
+use actix_web::{get, web, HttpResponse, Responder};
 
 #[get("/{short_code}")]
 pub async fn redirect_short_code(
@@ -32,13 +17,9 @@ pub async fn redirect_short_code(
         Some(url) => url,
     };
 
-    // actix_web::web::Redirect::to("http://0.0.0.0/").see_other()
-
     HttpResponse::TemporaryRedirect()
         .append_header(("Location", redirect_to))
         .body("")
-    // Redirect::to(redirect_to)
-    // HttpResponse::TemporaryRedirect().
 }
 
 fn validate_short_code_request(short_url: &String) -> Result<bool, String> {
