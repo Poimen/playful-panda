@@ -6,6 +6,8 @@ use actix_web::{get, web, App, HttpResponse, HttpServer, Responder, Result};
 use configuration::AppSettings;
 use std::env;
 
+// use crate::endpoints::redis_client::RedisClient;
+
 // mod short_id;
 
 // use redis::Commands;
@@ -30,14 +32,14 @@ async fn main() -> std::io::Result<()> {
     };
 
     println!(
-        "Starting server ... {:}:{:}",
+        "Starting server on {:}:{:} ...",
         settings.host.ip_addr, settings.host.port
     );
 
-    let app_data = web::Data::new(settings.clone());
+    let app_data = settings.clone();
     HttpServer::new(move || {
         App::new()
-            .app_data(app_data.clone())
+            .app_data(web::Data::new(app_data.clone()))
             .service(endpoints::health::health_checker_handler)
             .service(endpoints::generate::generate_short_url)
             // .service(web::scope("/").route("/", web::get().to(index)))

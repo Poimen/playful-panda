@@ -1,5 +1,5 @@
 use super::short_id;
-use crate::configuration::AppSettings;
+use crate::{configuration::AppSettings, endpoints::redis_client::store_short_code};
 use actix_web::{post, web, HttpResponse};
 use serde::{Deserialize, Serialize};
 
@@ -18,7 +18,12 @@ pub async fn generate_short_url(
         return HttpResponse::BadRequest().json(validation_result.err());
     };
 
-    HttpResponse::Ok().json(short_id::generate(&settings))
+    let short_id = short_id::generate(&settings);
+
+    match store_short_code(&settings, &short_id, &request.short_url) {
+        Ok(_) => HttpResponse::NoContent().body(""),
+        Err(e) => HttpResponse::UnprocessableEntity().json(e),
+    }
 }
 
 fn validate_short_code_request(short_url: &String) -> Result<bool, String> {
