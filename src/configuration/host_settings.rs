@@ -1,3 +1,7 @@
+pub const WEB_SERVER_DEFAULT_ADDRESS: &'static str = "localhost";
+
+pub const WEB_SERVER_DEFAULT_PORT: u16 = 8000;
+
 #[derive(Debug)]
 pub struct HostSettings {
     pub ip_addr: String,
@@ -23,8 +27,8 @@ impl HostSettings {
 impl Default for HostSettings {
     fn default() -> Self {
         HostSettings {
-            ip_addr: String::from("localhost"),
-            port: 8000,
+            ip_addr: String::from(WEB_SERVER_DEFAULT_ADDRESS),
+            port: WEB_SERVER_DEFAULT_PORT,
         }
     }
 }
