@@ -1,2 +1,21 @@
-GET http://127.0.0.1:8000/api/health
+@hostname=127.0.0.1
+@port=8000
+@host={{hostname}}:{{port}}
+
+### Service health
+GET http://{{host}}/api/health
 Accept: application/json
+
+
+### Generate short-code
+POST http://{{host}}/api/short-code
+Accept: application/json
+Content-Type: application/json
+
+{
+  "short_url": "https://www.google.com"
+}
+
+
+### HTTP
+GET http://{{host}}/code
