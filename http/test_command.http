@@ -17,5 +17,17 @@ Connection: keep-alive
 }
 
 ###
+POST http://{{host}}/api/short-code
+Accept: application/json
+Content-Type: application/json
+Connection: keep-alive
 
-GET http://{{host}}/code
+{
+  "short_url": "https://www.google.com",
+  "seconds": 100
+}
+
+
+###
+
+GET http://{{host}}/6d9yVHy

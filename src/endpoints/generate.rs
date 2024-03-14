@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 struct ShortCodeRequest {
     short_url: String,
+    seconds: Option<u64>,
 }
 
 #[post("/api/short-code")]
@@ -20,7 +21,7 @@ pub async fn generate_short_url(
 
     let short_id = short_id::generate(&settings);
 
-    match store_short_code(&settings, &short_id, &request.short_url) {
+    match store_short_code(&settings, &short_id, &request.short_url, &request.seconds) {
         Ok(_) => HttpResponse::NoContent().body(""),
         Err(e) => HttpResponse::UnprocessableEntity().json(e),
     }
