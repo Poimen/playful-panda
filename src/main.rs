@@ -1,8 +1,8 @@
 mod configuration;
-// mod settings;
+mod endpoints;
 
 use actix_web::middleware::Logger;
-use actix_web::{get, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, web, App, HttpResponse, HttpServer, Responder, Result};
 use configuration::AppSettings;
 use std::env;
 
@@ -10,6 +10,15 @@ use std::env;
 
 // use redis::Commands;
 // use settings::AppSettings;
+
+#[get("/")]
+async fn index() -> impl Responder {
+    "Hello world!"
+}
+
+async fn not_found() -> Result<HttpResponse> {
+    Ok(HttpResponse::TemporaryRedirect().body(""))
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -25,9 +34,14 @@ async fn main() -> std::io::Result<()> {
         settings.host.ip_addr, settings.host.port
     );
 
+    let app_data = web::Data::new(settings.clone());
     HttpServer::new(move || {
         App::new()
-            .service(health_checker_handler)
+            .app_data(app_data.clone())
+            .service(endpoints::health::health_checker_handler)
+            .service(endpoints::generate::generate_short_url)
+            // .service(web::scope("/").route("/", web::get().to(index)))
+            .default_service(web::route().to(not_found))
             .wrap(Logger::default())
     })
     .bind((settings.host.ip_addr, settings.host.port))?
@@ -50,9 +64,4 @@ async fn main() -> std::io::Result<()> {
 
     // let new_id: String = con.get(&lookup).unwrap();
     // println!("short-id: {} {}", new_id, res);
-}
-
-#[get("/api/health")]
-async fn health_checker_handler() -> impl Responder {
-    HttpResponse::Ok().json("healthy")
 }
