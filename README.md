@@ -30,9 +30,30 @@ There are some environment variables that can be used:
 | Variable         | Description                                       | Default            |
 | ---------------- | --------------------------------------------------| ------------------ |
 | REDIS_SERVER_URL | URL to the REDIS server to use                    | None, Required     |
-| HOST_IP          | Host IP to run the webserver on                   | http://localhost   |
+| HOST_IP          | Host IP to run the webserver on                   | localhost          |
 | HOST_PORT        | Host Port to run the webserver on                 | 8000               |
 | ALPHABET         | Alphabet to use for short-code generation         | All safe URL codes |
 | SHORT_ID_LENGTH  | Length on short code                              | 7                  |
 
 The REDIS server url can contain all the REDIS permission/user login details as required. See REDIS documentation for details.
+
+
+## Testing
+
+There is a http [file](./http/test_command.http) that will run test requests against the server.
+
+The endpoints exposed are:
+```
+GET /api/health
+```
+Check if the service is up and running
+
+```
+POST /api/short-code
+```
+Generate a shortcode for a given url
+
+```
+GET {server}:80/{short-code}
+```
+Redirect to the short code, or 404
