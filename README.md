@@ -1,20 +1,16 @@
 # playful-panda
 
-*** WIP * WIP ***
-
-This is a work-in-progress
-
-*** WIP * WIP ***
-
 This is a playful repo for playing with code in rust.
 
 It is an idea for a url shortener that presents a simple API with a REDIS backend as a datastore. This would require REDIS to have a persistent layer, but as short urls are read more than written, caching this in REDIS make for quicker lookups.
 
-## Requirements
+## Details
 
 The backend of REDIS is run through docker. There is a docker-compose [file](./docker/docker-compose.yml) that will spin up a REDIS instance.
 
 Naturally, using docker-compose for anything outside testing, should be avoided. Please run REDIS in a proper cluster/permissions etc.
+
+The url handler doesn't dedup any data, so you can generate short urls for the same url multiple times, each time will give a different short code. They are all stored separately as well. The url can be set to have a TTL (time-to-live) where it will no longer be available.
 
 ## Running
 
