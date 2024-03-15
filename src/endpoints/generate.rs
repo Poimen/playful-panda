@@ -3,10 +3,16 @@ use crate::{configuration::AppSettings, endpoints::redis_client::store_short_cod
 use actix_web::{post, web, HttpResponse};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 struct ShortCodeRequest {
     short_url: String,
     seconds: Option<u64>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all(serialize = "PascalCase"))]
+struct ShortCodeResponse {
+    short_code: String,
 }
 
 #[post("/api/short-code")]
@@ -22,7 +28,9 @@ pub async fn generate_short_url(
     let short_id = short_id::generate(&settings);
 
     match store_short_code(&settings, &short_id, &request.short_url, &request.seconds) {
-        Ok(_) => HttpResponse::NoContent().body(""),
+        Ok(_) => HttpResponse::Ok().json(ShortCodeResponse {
+            short_code: short_id,
+        }),
         Err(e) => HttpResponse::UnprocessableEntity().json(e),
     }
 }
