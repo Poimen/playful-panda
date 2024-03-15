@@ -1,4 +1,4 @@
-pub const SHORT_ID_ALPHABET: &'static [u8] =
+pub const SHORT_ID_ALPHABET: &[u8] =
     b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-";
 
 pub const SHORT_ID_LEN: u8 = 7;
@@ -20,7 +20,7 @@ impl ShortIdSettings {
 
         let user_len = match id_len {
             None => defaults.id_len,
-            Some(len) => u8::from_str_radix(&len, 10).unwrap_or(defaults.id_len),
+            Some(len) => len.parse::<u8>().unwrap_or(defaults.id_len),
         };
 
         ShortIdSettings {

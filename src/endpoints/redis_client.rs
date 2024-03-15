@@ -5,7 +5,7 @@ fn connect(settings: &AppSettings) -> Result<redis::Connection, RedisError> {
     let client: Result<redis::Client, redis::RedisError> =
         redis::Client::open(settings.redis.server.as_str());
 
-    Ok(client?.get_connection()?)
+    client?.get_connection()
 }
 
 pub fn store_short_code(
@@ -26,7 +26,7 @@ pub fn store_short_code(
         return Err(String::from("Key exists already"));
     }
 
-    let _: () = match seconds_ttl {
+    match seconds_ttl {
         Some(seconds) => {
             match connection.set_ex(&lookup, url_redirect, *seconds) {
                 Err(e) => {

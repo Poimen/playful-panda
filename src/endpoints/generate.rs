@@ -27,7 +27,7 @@ pub async fn generate_short_url(
     }
 }
 
-fn validate_short_code_request(short_url: &String) -> Result<bool, String> {
+fn validate_short_code_request(short_url: &str) -> Result<bool, String> {
     if short_url.is_empty() {
         return Err(String::from("Url is missing"));
     }

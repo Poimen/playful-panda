@@ -1,4 +1,4 @@
-pub const WEB_SERVER_DEFAULT_ADDRESS: &'static str = "localhost";
+pub const WEB_SERVER_DEFAULT_ADDRESS: &str = "localhost";
 
 pub const WEB_SERVER_DEFAULT_PORT: u16 = 8000;
 
@@ -13,7 +13,7 @@ impl HostSettings {
         let defaults = HostSettings::default();
 
         let user_port = match port {
-            Some(x) => u16::from_str_radix(x, 10).unwrap(),
+            Some(x) => x.parse::<u16>().unwrap(),
             None => defaults.port,
         };
 

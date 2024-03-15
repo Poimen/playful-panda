@@ -22,7 +22,7 @@ pub async fn redirect_short_code(
         .body("")
 }
 
-fn validate_short_code_request(short_url: &String) -> Result<bool, String> {
+fn validate_short_code_request(short_url: &str) -> Result<bool, String> {
     if short_url.is_empty() {
         return Err(String::from("Url is missing"));
     }
