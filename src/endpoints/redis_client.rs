@@ -1,6 +1,12 @@
 use crate::configuration::AppSettings;
 use redis::{Commands, RedisError};
 
+pub enum RedisClientError {
+    Connection(String),
+    KeySet(String),
+    KeyExists,
+}
+
 fn connect(settings: &AppSettings) -> Result<redis::Connection, RedisError> {
     let client: Result<redis::Client, redis::RedisError> =
         redis::Client::open(settings.redis.server.as_str());
@@ -13,26 +19,26 @@ pub fn store_short_code(
     short_id: &String,
     url_redirect: &String,
     seconds_ttl: &Option<u64>,
-) -> Result<(), String> {
+) -> Result<(), RedisClientError> {
     let mut connection = match connect(settings) {
         Ok(c) => c,
-        Err(e) => return Err(e.to_string()),
+        Err(e) => return Err(RedisClientError::Connection(e.to_string())),
     };
 
     let lookup = format!("url_short:{short_id}");
     let exists = connection.exists(&lookup);
 
     if exists.is_err() || exists.unwrap() {
-        return Err(String::from("Key exists already"));
+        return Err(RedisClientError::KeyExists);
     }
 
     match seconds_ttl {
         Some(seconds) => {
             match connection.set_ex(&lookup, url_redirect, *seconds) {
                 Err(e) => {
-                    return Err(String::from(
+                    return Err(RedisClientError::KeySet(String::from(
                         e.detail().unwrap_or("Failed to set REDIS key (TTL)"),
-                    ))
+                    )))
                 }
                 Ok(a) => a,
             };
@@ -40,9 +46,9 @@ pub fn store_short_code(
         None => {
             match connection.set(&lookup, url_redirect) {
                 Err(e) => {
-                    return Err(String::from(
+                    return Err(RedisClientError::KeySet(String::from(
                         e.detail().unwrap_or("Failed to set REDIS key"),
-                    ))
+                    )))
                 }
                 Ok(a) => a,
             };

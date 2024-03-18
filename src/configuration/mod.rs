@@ -24,7 +24,11 @@ impl AppSettings {
         Ok(AppSettings {
             host: HostSettings::new(args.get("HOST_IP"), args.get("HOST_PORT")),
             redis: RedisClusterSettings::new(redis_server_url),
-            short_id: ShortIdSettings::new(args.get("ALPHABET"), args.get("SHORT_ID_LENGTH")),
+            short_id: ShortIdSettings::new(
+                args.get("ALPHABET"),
+                args.get("SHORT_ID_LENGTH"),
+                args.get("SHORT_ID_REPEAT_CLASh_LENGTH"),
+            ),
         })
     }
 }
