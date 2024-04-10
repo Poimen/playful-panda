@@ -13,7 +13,7 @@ Content-Type: application/json
 Connection: keep-alive
 
 {
-  "short_url": "https://www.google.com"
+  "ShortUrl": "https://www.google.com"
 }
 
 ###
@@ -23,11 +23,11 @@ Content-Type: application/json
 Connection: keep-alive
 
 {
-  "short_url": "https://www.google.com",
-  "seconds": 100
+  "ShortUrl": "https://www.google.com",
+  "Seconds": 100
 }
 
 
 ###
 
-GET http://{{host}}/6d9yVHy
+GET http://{{host}}/EL_nCSq
