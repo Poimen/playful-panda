@@ -16,8 +16,10 @@ The url handler doesn't dedup any data, so you can generate short urls for the s
 
 The project can be run by using the command, in the root:
 ```bash
- REDIS_SERVER_URL="redis://:changeit@localhost" cargo run
+cargo run
 ```
+
+There is a `.env.development` that sets up the `REDIS_SERVER` url. Please update that to give the proper URL for the redis server.
 
 This will expect that there is a REDIS server running at the URL. For a test environment, the docker-compose will wil run Redis in a way all the default configuration setup will expect.
 
@@ -55,9 +57,15 @@ GET {server}:80/{short-code}
 ```
 Redirect to the short code, or 404
 
+## Web client
+
+The initial version was written using actix-web, and then ported to axum. Axum performed better, from with random benchmarks.
+
+The axum version has since been iterated upon and improved.
+
 ## Performance using bombardier
 
-Write performance:
+Write performance (actix-web):
 ```
 $ bombardier -c 125 -n 100000 -m POST http://127.0.0.1:8000/api/short-code -H "Content-Type: application/json" -b '{"ShortUrl": "http://localhost", "Seconds": 100}'
 Bombarding http://127.0.0.1:8000/api/short-code with 100000 request(s) using 125 connection(s)
@@ -72,7 +80,22 @@ Statistics        Avg      Stdev        Max
   Throughput:     3.40MB/s
 ```
 
-Redirect performance:
+Write performance (axum):
+```
+$ bombardier -c 125 -n 100000 -m POST http://127.0.0.1:8000/api/short-code -H "Content-Type: application/json" -b '{"ShortUrl": "http://localhost", "Seconds": 100}'
+Bombarding http://127.0.0.1:8000/api/short-code with 100000 request(s) using 125 connection(s)
+ 100000 / 100000 [==================================================================================] 100.00% 41529/s 2s
+Done!
+Statistics        Avg      Stdev        Max
+  Reqs/sec     44817.37    8597.59   62631.09
+  Latency        2.79ms   505.56us    15.79ms
+  HTTP codes:
+    1xx - 0, 2xx - 100000, 3xx - 0, 4xx - 0, 5xx - 0
+    others - 0
+  Throughput:    13.12MB/s
+```
+
+Redirect performance (actix-web):
 ```
 $ bombardier -c 125 -n 100000 -m GET http://localhost:8000/FzZeTeK
 Bombarding http://localhost:8000/FzZeTeK with 100000 request(s) using 125 connection(s)
@@ -85,4 +108,19 @@ Statistics        Avg      Stdev        Max
     1xx - 0, 2xx - 0, 3xx - 100000, 4xx - 0, 5xx - 0
     others - 0
   Throughput:    17.27MB/s
+```
+
+Redirect performance (axum):
+```
+$ bombardier -c 125 -n 100000 -m GET http://localhost:8000/FzZeTeK
+Bombarding http://localhost:8000/FzZeTeK with 100000 request(s) using 125 connection(s)
+ 100000 / 100000 [==================================================================================] 100.00% 83014/s 1s
+Done!
+Statistics        Avg      Stdev        Max
+  Reqs/sec     91774.95   20325.00  124183.63
+  Latency        1.36ms   620.62us    25.01ms
+  HTTP codes:
+    1xx - 0, 2xx - 0, 3xx - 100000, 4xx - 0, 5xx - 0
+    others - 0
+  Throughput:    24.96MB/s
 ```

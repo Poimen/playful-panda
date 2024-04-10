@@ -1,28 +1,36 @@
+use super::redis_client::RedisClientError;
 use crate::endpoints::redis_client::RedisClient;
-use actix_web::{get, web, HttpResponse, Responder};
+use axum::body::Body;
+use axum::extract::{Path, State};
+use axum::http::StatusCode;
+use axum::response::Response;
 
-#[get("/{short_code}")]
-pub async fn redirect_short_code(
-    redis: web::Data<RedisClient>,
-    path: web::Path<String>,
-) -> impl Responder {
-    let short_code = path.into_inner();
-    let validation_result = validate_short_code_request(&short_code);
-    if validation_result.is_err() {
-        return HttpResponse::BadRequest().json(validation_result.err());
-    };
+const DEFAULT_CACHE_CONTROL_HEADER_VALUE: &str =
+    "public, max-age=300, s-maxage=300, stale-while-revalidate=300, stale-if-error=300";
 
-    let redirect_to = match redis.get(&short_code).await {
-        Err(_) => return HttpResponse::NotFound().body(""),
-        Ok(url) => url,
-    };
+pub async fn redirect(
+    State(redis_client): State<RedisClient>,
+    Path(short_code): Path<String>,
+) -> Result<Response, StatusCode> {
+    _ = validate_short_code_request(&short_code).map_err(|_| StatusCode::BAD_REQUEST)?;
 
-    HttpResponse::TemporaryRedirect()
-        .append_header(("Location", redirect_to))
-        .body("")
+    let redirect_to = redis_client.get(&short_code).await.map_err(|e| match e {
+        RedisClientError::ConnectionFailed(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        RedisClientError::GetValueFromKeyFailed(_) => StatusCode::NOT_FOUND,
+        RedisClientError::KeyExists(_) => panic!(),
+        RedisClientError::SetKeyFailed(_) => panic!(),
+        RedisClientError::ExpireKeyFailed(_) => panic!(),
+    })?;
+
+    Ok(Response::builder()
+        .status(StatusCode::TEMPORARY_REDIRECT)
+        .header("Location", redirect_to)
+        .header("Cache-Control", DEFAULT_CACHE_CONTROL_HEADER_VALUE)
+        .body(Body::empty())
+        .expect("Should always construct response"))
 }
 
-fn validate_short_code_request(short_url: &str) -> Result<bool, String> {
+fn validate_short_code_request(short_url: &str) -> Result<(), String> {
     if short_url.is_empty() {
         return Err(String::from("Url is missing"));
     }
@@ -31,5 +39,5 @@ fn validate_short_code_request(short_url: &str) -> Result<bool, String> {
         return Err(String::from("Url is too long"));
     }
 
-    Ok(true)
+    Ok(())
 }

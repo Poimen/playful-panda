@@ -1,6 +1,5 @@
-use actix_web::{get, HttpResponse, Responder};
+use axum::{http::StatusCode, response::IntoResponse};
 
-#[get("/api/health")]
-pub async fn health_checker_handler() -> impl Responder {
-    HttpResponse::Ok().json("healthy")
+pub async fn health() -> impl IntoResponse {
+    (StatusCode::OK, "Service is healthy")
 }
