@@ -1,7 +1,9 @@
 use crate::configuration::AppSettings;
-use redis::{aio::MultiplexedConnection, RedisError};
+use redis::aio::MultiplexedConnection;
 
+#[derive(Debug)]
 pub enum RedisClientError {
+    ConnectionFailed(String),
     SetKeyFailed(String),
     KeyExists(String),
     ExpireKeyFailed(String),
@@ -14,10 +16,20 @@ pub struct RedisClient {
 }
 
 impl RedisClient {
-    pub async fn new(settings: &AppSettings) -> Result<Self, RedisError> {
-        let client = redis::Client::open(settings.redis.server.as_str());
+    pub async fn new(settings: &AppSettings) -> Result<Self, RedisClientError> {
+        let client = match redis::Client::open(settings.redis.server.as_str()) {
+            Err(e) => {
+                return Err(RedisClientError::ConnectionFailed(format!("{e}")));
+            }
+            Ok(c) => c,
+        };
 
-        let connection = client?.get_multiplexed_async_connection().await?;
+        let connection = match client.get_multiplexed_async_connection().await {
+            Err(e) => {
+                return Err(RedisClientError::ConnectionFailed(format!("{e}")));
+            }
+            Ok(c) => c,
+        };
 
         Ok(RedisClient { connection })
     }
@@ -56,9 +68,7 @@ impl RedisClient {
             .await
         {
             Err(e) => {
-                return Err(RedisClientError::KeyExists(String::from(
-                    e.detail().unwrap_or("Failed to check exists on REDIS key"),
-                )));
+                return Err(RedisClientError::KeyExists(format!("{e}")));
             }
             Ok(_) => Ok(()),
         }
@@ -76,9 +86,7 @@ impl RedisClient {
             .await
         {
             Err(e) => {
-                return Err(RedisClientError::SetKeyFailed(String::from(
-                    e.detail().unwrap_or("Failed to set REDIS key"),
-                )));
+                return Err(RedisClientError::SetKeyFailed(format!("{e}")));
             }
             Ok(_) => Ok(()),
         }
@@ -101,9 +109,7 @@ impl RedisClient {
             .await
         {
             Err(e) => {
-                return Err(RedisClientError::ExpireKeyFailed(String::from(
-                    e.detail().unwrap_or("Failed to expire REDIS key"),
-                )));
+                return Err(RedisClientError::ExpireKeyFailed(format!("{e}")));
             }
             Ok(_) => Ok(()),
         }
@@ -120,9 +126,7 @@ impl RedisClient {
             .await
         {
             Err(e) => {
-                return Err(RedisClientError::GetValueFromKeyFailed(String::from(
-                    e.detail().unwrap_or("Failed to get REDIS value"),
-                )));
+                return Err(RedisClientError::GetValueFromKeyFailed(format!("{e}")));
             }
             Ok(url) => Ok(url),
         }

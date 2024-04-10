@@ -48,6 +48,7 @@ pub async fn generate_short_url(
                 }
                 RedisClientError::KeyExists(_) => {}
                 RedisClientError::GetValueFromKeyFailed(_) => panic!(),
+                RedisClientError::ConnectionFailed(_) => panic!(),
             },
         }
     }
