@@ -1,9 +1,9 @@
-use crate::{configuration::AppSettings, endpoints::redis_client::retrieve_redirect_url};
+use crate::endpoints::redis_client::RedisClient;
 use actix_web::{get, web, HttpResponse, Responder};
 
 #[get("/{short_code}")]
 pub async fn redirect_short_code(
-    settings: web::Data<AppSettings>,
+    redis: web::Data<RedisClient>,
     path: web::Path<String>,
 ) -> impl Responder {
     let short_code = path.into_inner();
@@ -12,9 +12,9 @@ pub async fn redirect_short_code(
         return HttpResponse::BadRequest().json(validation_result.err());
     };
 
-    let redirect_to = match retrieve_redirect_url(&settings, &short_code) {
-        None => return HttpResponse::NotFound().body(""),
-        Some(url) => url,
+    let redirect_to = match redis.get(&short_code).await {
+        Err(_) => return HttpResponse::NotFound().body(""),
+        Ok(url) => url,
     };
 
     HttpResponse::TemporaryRedirect()

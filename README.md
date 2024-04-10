@@ -59,34 +59,30 @@ Redirect to the short code, or 404
 
 Write performance:
 ```
-$ bombardier -c 125 -n 100000 -m POST http://127.0.0.1:8000/api/short-code -H "Content-Type: application/json" -b '{"ShortUrl": "https://www.google.com", "Sseconds": 100}'
+$ bombardier -c 125 -n 100000 -m POST http://127.0.0.1:8000/api/short-code -H "Content-Type: application/json" -b '{"ShortUrl": "http://localhost", "Seconds": 100}'
 Bombarding http://127.0.0.1:8000/api/short-code with 100000 request(s) using 125 connection(s)
- 100000 / 100000 [=========================================================================================================================================================================] 100.00% 1093/s 1m31s
+ 100000 / 100000 [==================================================================================] 100.00% 11327/s 8s
 Done!
 Statistics        Avg      Stdev        Max
-  Reqs/sec      1094.81    1216.03    6755.92
-  Latency      114.02ms    80.34ms   740.46ms
+  Reqs/sec     11590.25    2265.67   23626.36
+  Latency       10.78ms     1.21ms    32.66ms
   HTTP codes:
-    1xx - 0, 2xx - 56462, 3xx - 0, 4xx - 43538, 5xx - 0
+    1xx - 0, 2xx - 100000, 3xx - 0, 4xx - 0, 5xx - 0
     others - 0
-  Throughput:   359.59KB/s
+  Throughput:     3.40MB/s
 ```
-
-Write performance does not account for key-clashes
 
 Redirect performance:
 ```
-$ bombardier -c 125 -n 100000 -m GET http://localhost:8000/EL_nCSq
-Bombarding http://localhost:8000/EL_nCSq with 100000 request(s) using 125 connection(s)
- 100000 / 100000 [=========================================================================================================================================================================] 100.00% 1182/s 1m24s
+$ bombardier -c 125 -n 100000 -m GET http://localhost:8000/FzZeTeK
+Bombarding http://localhost:8000/FzZeTeK with 100000 request(s) using 125 connection(s)
+ 100000 / 100000 [==================================================================================] 100.00% 83040/s 1s
 Done!
 Statistics        Avg      Stdev        Max
-  Reqs/sec      1185.16    1478.58    9040.65
-  Latency      105.40ms    68.43ms   435.15ms
+  Reqs/sec     96462.98   18407.90  126084.82
+  Latency        1.29ms   467.18us    19.38ms
   HTTP codes:
-    1xx - 0, 2xx - 0, 3xx - 56461, 4xx - 43539, 5xx - 0
+    1xx - 0, 2xx - 0, 3xx - 100000, 4xx - 0, 5xx - 0
     others - 0
-  Throughput:   202.68KB/s
+  Throughput:    17.27MB/s
 ```
-
-This redirects to Google.com

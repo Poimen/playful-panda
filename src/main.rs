@@ -4,6 +4,7 @@ mod endpoints;
 use actix_web::middleware::Logger;
 use actix_web::{web, App, HttpServer};
 use configuration::AppSettings;
+use endpoints::redis_client::RedisClient;
 use std::env;
 
 #[actix_web::main]
@@ -15,6 +16,8 @@ async fn main() -> std::io::Result<()> {
         Err(e) => panic!("Failed to read settings {:}", e),
     };
 
+    let redis_client = RedisClient::new(&settings).await.unwrap();
+
     println!(
         "Starting server on {:}:{:} ...",
         settings.host.ip_addr, settings.host.port
@@ -24,6 +27,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(app_data.clone()))
+            .app_data(web::Data::new(redis_client.clone()))
             .service(endpoints::health::health_checker_handler)
             .service(endpoints::generate::generate_short_url)
             .service(endpoints::redirect::redirect_short_code)

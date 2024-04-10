@@ -1,7 +1,7 @@
 use super::short_id;
 use crate::{
     configuration::AppSettings,
-    endpoints::redis_client::{store_short_code, RedisClientError},
+    endpoints::redis_client::{RedisClient, RedisClientError},
 };
 use actix_web::{post, web, HttpResponse};
 use serde::{Deserialize, Serialize};
@@ -22,6 +22,7 @@ struct ShortCodeResponse {
 #[post("/api/short-code")]
 pub async fn generate_short_url(
     settings: web::Data<AppSettings>,
+    redis: web::Data<RedisClient>,
     request: web::Json<ShortCodeRequest>,
 ) -> HttpResponse {
     let validation_result = validate_short_code_request(&request.short_url);
@@ -29,26 +30,28 @@ pub async fn generate_short_url(
         return HttpResponse::BadRequest().json(validation_result.err());
     };
 
-    let short_id = short_id::generate(&settings);
-
     for _ in 0..settings.short_id.repeat_clash_len {
-        match store_short_code(&settings, &short_id, &request.short_url, &request.seconds) {
-            Ok(_) => {
+        let short_id = short_id::generate(&settings);
+
+        match redis
+            .set_if_not_exists(&short_id, &request.short_url, request.seconds)
+            .await
+        {
+            Ok(()) => {
                 return HttpResponse::Ok().json(ShortCodeResponse {
                     short_code: short_id,
-                })
+                });
             }
             Err(e) => match e {
-                RedisClientError::Connection(m) | RedisClientError::KeySet(m) => {
-                    println!("Connection error ... {:}", m);
+                RedisClientError::KeyExpire(_) | RedisClientError::KeySet(_) => {
                     return HttpResponse::InternalServerError().body("");
                 }
-                RedisClientError::KeyExists => {}
+                RedisClientError::KeyExists(_) => {}
+                RedisClientError::KeyGet(_) => panic!(),
             },
         }
     }
 
-    println!("Too many Key collisions ...");
     HttpResponse::UnprocessableEntity().body("")
 }
 

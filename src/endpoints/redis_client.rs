@@ -1,73 +1,144 @@
 use crate::configuration::AppSettings;
-use redis::{Commands, RedisError};
+use redis::{aio::MultiplexedConnection, RedisError};
 
 pub enum RedisClientError {
-    Connection(String),
     KeySet(String),
-    KeyExists,
+    KeyExists(String),
+    KeyExpire(String),
+    KeyGet(String),
 }
 
-fn connect(settings: &AppSettings) -> Result<redis::Connection, RedisError> {
-    let client: Result<redis::Client, redis::RedisError> =
-        redis::Client::open(settings.redis.server.as_str());
-
-    client?.get_connection()
+#[derive(Debug, Clone)]
+pub struct RedisClient {
+    pub connection: MultiplexedConnection,
 }
 
-pub fn store_short_code(
-    settings: &AppSettings,
-    short_id: &String,
-    url_redirect: &String,
-    seconds_ttl: &Option<u64>,
-) -> Result<(), RedisClientError> {
-    let mut connection = match connect(settings) {
-        Ok(c) => c,
-        Err(e) => return Err(RedisClientError::Connection(e.to_string())),
-    };
+impl RedisClient {
+    pub async fn new(settings: &AppSettings) -> Result<Self, RedisError> {
+        let client = redis::Client::open(settings.redis.server.as_str());
 
-    let lookup = format!("url_short:{short_id}");
-    let exists = connection.exists(&lookup);
+        let connection = client?.get_multiplexed_async_connection().await?;
 
-    if exists.is_err() || exists.unwrap() {
-        return Err(RedisClientError::KeyExists);
+        Ok(RedisClient { connection })
     }
 
-    match seconds_ttl {
-        Some(seconds) => {
-            match connection.set_ex(&lookup, url_redirect, *seconds) {
-                Err(e) => {
-                    return Err(RedisClientError::KeySet(String::from(
-                        e.detail().unwrap_or("Failed to set REDIS key (TTL)"),
-                    )))
-                }
-                Ok(a) => a,
-            };
+    pub async fn set_if_not_exists(
+        &self,
+        key: &String,
+        value: &String,
+        seconds: Option<u64>,
+    ) -> Result<(), RedisClientError> {
+        let mut connection = self.connection.clone();
+
+        self.exists(&mut connection, key).await?;
+
+        self.set_key(&mut connection, key, value).await?;
+
+        self.expire_key(&mut connection, key, seconds).await?;
+
+        Ok(())
+    }
+
+    pub async fn get(&self, key: &String) -> Result<String, RedisClientError> {
+        let mut connection = self.connection.clone();
+
+        self.get_value(&mut connection, key).await
+    }
+
+    async fn exists(
+        &self,
+        connection: &mut MultiplexedConnection,
+        key: &String,
+    ) -> Result<(), RedisClientError> {
+        match redis::cmd("EXISTS")
+            .arg(key)
+            .query_async::<MultiplexedConnection, bool>(connection)
+            .await
+        {
+            Err(e) => {
+                return Err(RedisClientError::KeyExists(String::from(
+                    e.detail().unwrap_or("Failed to check exists on REDIS key"),
+                )));
+            }
+            Ok(_) => Ok(()),
         }
-        None => {
-            match connection.set(&lookup, url_redirect) {
-                Err(e) => {
-                    return Err(RedisClientError::KeySet(String::from(
-                        e.detail().unwrap_or("Failed to set REDIS key"),
-                    )))
-                }
-                Ok(a) => a,
-            };
+    }
+
+    async fn set_key(
+        &self,
+        connection: &mut MultiplexedConnection,
+        key: &String,
+        value: &String,
+    ) -> Result<(), RedisClientError> {
+        match redis::cmd("SET")
+            .arg(&[&key, &value])
+            .query_async::<MultiplexedConnection, bool>(connection)
+            .await
+        {
+            Err(e) => {
+                return Err(RedisClientError::KeySet(String::from(
+                    e.detail().unwrap_or("Failed to set REDIS key"),
+                )));
+            }
+            Ok(_) => Ok(()),
         }
-    };
+    }
 
-    Ok(())
-}
+    async fn expire_key(
+        &self,
+        connection: &mut MultiplexedConnection,
+        key: &String,
+        seconds: Option<u64>,
+    ) -> Result<(), RedisClientError> {
+        if seconds.is_none() {
+            return Ok(());
+        }
 
-pub fn retrieve_redirect_url(settings: &AppSettings, short_id: &String) -> Option<String> {
-    let mut connection = match connect(settings) {
-        Ok(c) => c,
-        Err(_) => return None,
-    };
+        match redis::cmd("EXPIRE")
+            .arg(&key)
+            .arg(seconds.unwrap())
+            .query_async::<MultiplexedConnection, bool>(connection)
+            .await
+        {
+            Err(e) => {
+                return Err(RedisClientError::KeyExpire(String::from(
+                    e.detail().unwrap_or("Failed to expire REDIS key"),
+                )));
+            }
+            Ok(_) => Ok(()),
+        }
+    }
 
-    let lookup = format!("url_short:{short_id}");
-
-    match connection.get(&lookup) {
-        Ok(url) => Some(url),
-        Err(_) => None,
+    async fn get_value(
+        &self,
+        connection: &mut MultiplexedConnection,
+        key: &String,
+    ) -> Result<String, RedisClientError> {
+        match redis::cmd("GET")
+            .arg(&key)
+            .query_async::<MultiplexedConnection, String>(connection)
+            .await
+        {
+            Err(e) => {
+                return Err(RedisClientError::KeyGet(String::from(
+                    e.detail().unwrap_or("Failed to get REDIS value"),
+                )));
+            }
+            Ok(url) => Ok(url),
+        }
     }
 }
+
+// pub fn retrieve_redirect_url(settings: &AppSettings, short_id: &String) -> Option<String> {
+//     let mut connection = match connect(settings) {
+//         Ok(c) => c,
+//         Err(_) => return None,
+//     };
+
+//     let lookup = format!("url_short:{short_id}");
+
+//     match connection.get(&lookup) {
+//         Ok(url) => Some(url),
+//         Err(_) => None,
+//     }
+// }
