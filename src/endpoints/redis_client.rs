@@ -2,10 +2,10 @@ use crate::configuration::AppSettings;
 use redis::{aio::MultiplexedConnection, RedisError};
 
 pub enum RedisClientError {
-    KeySet(String),
+    SetKeyFailed(String),
     KeyExists(String),
-    KeyExpire(String),
-    KeyGet(String),
+    ExpireKeyFailed(String),
+    GetValueFromKeyFailed(String),
 }
 
 #[derive(Debug, Clone)]
@@ -76,7 +76,7 @@ impl RedisClient {
             .await
         {
             Err(e) => {
-                return Err(RedisClientError::KeySet(String::from(
+                return Err(RedisClientError::SetKeyFailed(String::from(
                     e.detail().unwrap_or("Failed to set REDIS key"),
                 )));
             }
@@ -95,13 +95,13 @@ impl RedisClient {
         }
 
         match redis::cmd("EXPIRE")
-            .arg(&key)
+            .arg(key)
             .arg(seconds.unwrap())
             .query_async::<MultiplexedConnection, bool>(connection)
             .await
         {
             Err(e) => {
-                return Err(RedisClientError::KeyExpire(String::from(
+                return Err(RedisClientError::ExpireKeyFailed(String::from(
                     e.detail().unwrap_or("Failed to expire REDIS key"),
                 )));
             }
@@ -115,12 +115,12 @@ impl RedisClient {
         key: &String,
     ) -> Result<String, RedisClientError> {
         match redis::cmd("GET")
-            .arg(&key)
+            .arg(key)
             .query_async::<MultiplexedConnection, String>(connection)
             .await
         {
             Err(e) => {
-                return Err(RedisClientError::KeyGet(String::from(
+                return Err(RedisClientError::GetValueFromKeyFailed(String::from(
                     e.detail().unwrap_or("Failed to get REDIS value"),
                 )));
             }
@@ -128,17 +128,3 @@ impl RedisClient {
         }
     }
 }
-
-// pub fn retrieve_redirect_url(settings: &AppSettings, short_id: &String) -> Option<String> {
-//     let mut connection = match connect(settings) {
-//         Ok(c) => c,
-//         Err(_) => return None,
-//     };
-
-//     let lookup = format!("url_short:{short_id}");
-
-//     match connection.get(&lookup) {
-//         Ok(url) => Some(url),
-//         Err(_) => None,
-//     }
-// }

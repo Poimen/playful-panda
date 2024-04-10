@@ -43,11 +43,11 @@ pub async fn generate_short_url(
                 });
             }
             Err(e) => match e {
-                RedisClientError::KeyExpire(_) | RedisClientError::KeySet(_) => {
+                RedisClientError::ExpireKeyFailed(_) | RedisClientError::SetKeyFailed(_) => {
                     return HttpResponse::InternalServerError().body("");
                 }
                 RedisClientError::KeyExists(_) => {}
-                RedisClientError::KeyGet(_) => panic!(),
+                RedisClientError::GetValueFromKeyFailed(_) => panic!(),
             },
         }
     }
