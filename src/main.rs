@@ -6,9 +6,11 @@ use actix_web::{web, App, HttpServer};
 use configuration::AppSettings;
 use endpoints::redis_client::RedisClient;
 use std::env;
+use std::path::Path;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    _ = dotenvy::from_path(Path::new(".env.development"));
     env_logger::init();
 
     let settings = match AppSettings::new(env::vars().collect()) {

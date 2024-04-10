@@ -15,3 +15,4 @@ redis = { version = "0.25.3", features = [
 actix-web = "4.5.1"
 env_logger = "0.11.1"
 serde = { version = "1.0.197", features = ["derive"] }
+dotenvy = "0.15.7"
