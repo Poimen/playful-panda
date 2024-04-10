@@ -1,11 +1,11 @@
 #[derive(Debug, Clone)]
-pub struct RedisClusterSettings {
+pub struct RedisSettings {
     pub server: String,
 }
 
-impl RedisClusterSettings {
-    pub fn new(server_url: &String) -> RedisClusterSettings {
-        RedisClusterSettings {
+impl RedisSettings {
+    pub fn new(server_url: &String) -> RedisSettings {
+        RedisSettings {
             server: server_url.to_string(),
         }
     }

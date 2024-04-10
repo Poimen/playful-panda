@@ -3,14 +3,14 @@ mod redis_settings;
 mod short_id_settings;
 
 use host_settings::HostSettings;
-use redis_settings::RedisClusterSettings;
+use redis_settings::RedisSettings;
 use short_id_settings::ShortIdSettings;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct AppSettings {
     pub host: HostSettings,
-    pub redis: RedisClusterSettings,
+    pub redis: RedisSettings,
     pub short_id: ShortIdSettings,
 }
 
@@ -23,7 +23,7 @@ impl AppSettings {
 
         Ok(AppSettings {
             host: HostSettings::new(args.get("HOST_IP"), args.get("HOST_PORT")),
-            redis: RedisClusterSettings::new(redis_server_url),
+            redis: RedisSettings::new(redis_server_url),
             short_id: ShortIdSettings::new(
                 args.get("ALPHABET"),
                 args.get("SHORT_ID_LENGTH"),
