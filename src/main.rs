@@ -8,6 +8,9 @@ use axum::Router;
 use axum_prometheus::PrometheusMetricLayer;
 use std::error::Error;
 use std::path::Path;
+use std::time::Duration;
+use tower::ServiceBuilder;
+use tower_http::timeout::TimeoutLayer;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
@@ -37,6 +40,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route("/:short_code", get(endpoints::redirect::redirect))
         .route("/metrics", get(|| async move { metric_handle.render() }))
         .layer(prometheus_layer)
+        .layer(
+            ServiceBuilder::new().layer(TimeoutLayer::new(Duration::from_millis(
+                app_state.settings.host.req_timeout_ms,
+            ))),
+        )
         .with_state(app_state.clone());
 
     let listener = tokio::net::TcpListener::bind((

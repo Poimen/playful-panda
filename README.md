@@ -33,6 +33,7 @@ There are some environment variables that can be used:
 | ALPHABET         | Alphabet to use for short-code generation         | All safe URL codes |
 | SHORT_ID_LENGTH  | Length on short code                              | 7                  |
 | SHORT_ID_REPEAT_CLASH_LENGTH | Number of Repeats to perform if there is a key clash | 5  |
+| REQUEST_TIMEOUT_MS | Request timeout in milliseconds | 300 |
 
 The Redis server url can contain all the Redis permission/user login details as required. See Redis documentation for details.
 

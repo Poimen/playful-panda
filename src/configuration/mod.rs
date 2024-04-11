@@ -22,7 +22,11 @@ impl AppSettings {
         };
 
         Ok(AppSettings {
-            host: HostSettings::new(args.get("HOST_IP"), args.get("HOST_PORT")),
+            host: HostSettings::new(
+                args.get("HOST_IP"),
+                args.get("HOST_PORT"),
+                args.get("REQUEST_TIMEOUT_MS"),
+            ),
             redis: RedisSettings::new(redis_server_url),
             short_id: ShortIdSettings::new(
                 args.get("ALPHABET"),
