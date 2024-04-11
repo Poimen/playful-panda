@@ -68,7 +68,7 @@ impl RedisClient {
             .await
         {
             Err(e) => {
-                return Err(RedisClientError::KeyExists(format!("{e}")));
+                Err(RedisClientError::KeyExists(format!("{e}")))
             }
             Ok(_) => Ok(()),
         }
@@ -86,7 +86,7 @@ impl RedisClient {
             .await
         {
             Err(e) => {
-                return Err(RedisClientError::SetKeyFailed(format!("{e}")));
+                Err(RedisClientError::SetKeyFailed(format!("{e}")))
             }
             Ok(_) => Ok(()),
         }
@@ -109,7 +109,7 @@ impl RedisClient {
             .await
         {
             Err(e) => {
-                return Err(RedisClientError::ExpireKeyFailed(format!("{e}")));
+                Err(RedisClientError::ExpireKeyFailed(format!("{e}")))
             }
             Ok(_) => Ok(()),
         }
@@ -126,7 +126,7 @@ impl RedisClient {
             .await
         {
             Err(e) => {
-                return Err(RedisClientError::GetValueFromKeyFailed(format!("{e}")));
+                Err(RedisClientError::GetValueFromKeyFailed(format!("{e}")))
             }
             Ok(url) => Ok(url),
         }

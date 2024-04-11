@@ -12,7 +12,7 @@ pub async fn redirect(
     State(redis_client): State<RedisClient>,
     Path(short_code): Path<String>,
 ) -> Result<Response, StatusCode> {
-    _ = validate_short_code_request(&short_code).map_err(|_| StatusCode::BAD_REQUEST)?;
+    validate_short_code_request(&short_code).map_err(|_| StatusCode::BAD_REQUEST)?;
 
     let redirect_to = redis_client.get(&short_code).await.map_err(|e| match e {
         RedisClientError::ConnectionFailed(_) => StatusCode::INTERNAL_SERVER_ERROR,

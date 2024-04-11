@@ -24,8 +24,7 @@ pub async fn generate_short_url(
     State(redis_client): State<RedisClient>,
     Json(request): Json<ShortCodeRequest>,
 ) -> Result<Json<ShortCodeResponse>, (StatusCode, String)> {
-    _ = validate_short_code_request(&request.short_url)
-        .map_err(|e| (StatusCode::BAD_REQUEST, e))?;
+    validate_short_code_request(&request.short_url).map_err(|e| (StatusCode::BAD_REQUEST, e))?;
 
     for _ in 0..settings.short_id.repeat_clash_len {
         let short_id = short_id::generate(&settings);
