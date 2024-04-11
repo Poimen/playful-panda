@@ -5,6 +5,7 @@ use crate::{
 };
 use axum::{extract::State, http::StatusCode, Json};
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 #[derive(Deserialize)]
 #[serde(rename_all(deserialize = "PascalCase"))]
@@ -63,6 +64,10 @@ fn validate_short_code_request(short_url: &str) -> Result<(), String> {
 
     if !(short_url.starts_with("http://") || short_url.starts_with("https://")) {
         return Err(String::from("Not a http(s) url"));
+    }
+
+    if Url::parse(short_url).is_err() {
+        return Err(String::from("Url is not valid"));
     }
 
     Ok(())

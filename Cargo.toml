@@ -25,3 +25,4 @@ metrics = "0.22.3"
 metrics-exporter-prometheus = "0.14.0"
 tower = "0.4.13"
 tower-http = { version = "0.5.2", features = ["trace"] }
+url = "2.5.0"
