@@ -5,6 +5,7 @@ mod endpoints;
 use app_state::AppState;
 use axum::routing::{get, post};
 use axum::Router;
+use axum_prometheus::PrometheusMetricLayer;
 use std::error::Error;
 use std::path::Path;
 use tracing_subscriber::layer::SubscriberExt;
@@ -23,6 +24,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+    let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
+
     let app_state = AppState::new().await?;
 
     let app_routes = Router::new()
@@ -32,6 +35,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
             post(endpoints::generate::generate_short_url),
         )
         .route("/:short_code", get(endpoints::redirect::redirect))
+        .route("/metrics", get(|| async move { metric_handle.render() }))
+        .layer(prometheus_layer)
         .with_state(app_state.clone());
 
     let listener = tokio::net::TcpListener::bind((
@@ -53,18 +58,4 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .expect("Could not successfully create server");
 
     Ok(())
-
-    // let app_data = settings.clone();
-    // HttpServer::new(move || {
-    //     App::new()
-    //         .app_data(web::Data::new(app_data.clone()))
-    //         .app_data(web::Data::new(redis_client.clone()))
-    //         .service(endpoints::health::health_checker_handler)
-    //         .service(endpoints::generate::generate_short_url)
-    //         .service(endpoints::redirect::redirect_short_code)
-    //         .wrap(Logger::default())
-    // })
-    // .bind((settings.host.ip_addr, settings.host.port))?
-    // .run()
-    // .await
 }

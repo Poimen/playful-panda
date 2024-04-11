@@ -53,9 +53,14 @@ POST /api/short-code
 Generate a shortcode for a given url
 
 ```
-GET {server}:80/{short-code}
+GET /{short-code}
 ```
 Redirect to the short code, or 404
+
+```
+GET /metrics
+```
+Prometheus metrics
 
 ## Web client
 
